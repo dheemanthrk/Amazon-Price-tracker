@@ -32,7 +32,7 @@ def send_mail():
 
     msg = f"Subject: {subject}\n\n{body}"
 
-    server.sendmail('dheemanthkumawat22@gmail.com',msg)
+    server.sendmail('dheemanthkumawat22@gmail.com','dheemanthkumawat22@gmail.com',msg)#The from and to emails are same in this case
 
     print("Check your email !!")
 
