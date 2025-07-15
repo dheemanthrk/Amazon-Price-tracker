@@ -7,6 +7,7 @@ This is a basic Amazon price tracker that monitors the price of a specific produ
 - Scrapes product details (title and price) from Amazon using `BeautifulSoup`.
 - Sends an email notification when the price falls below the desired amount.
 - Easy to configure and customize.
+- Easy to use
 
 ## Prerequisites
 
