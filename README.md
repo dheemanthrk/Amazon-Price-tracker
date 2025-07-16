@@ -1,40 +1,61 @@
-# Amazon-Price-tracker
+# Amazon Price Tracker 🇨🇦
 
-This is a basic Amazon price tracker that monitors the price of a specific product on Amazon and sends an email notification when the price drops below a specified threshold.
+A simple Python-based Amazon price tracker for Amazon.ca that monitors the price of a specific product and sends an email alert when the price drops below your target.
 
-## Features
+---
 
-- Scrapes product details (title and price) from Amazon using `BeautifulSoup`.
-- Sends an email notification when the price falls below the desired amount.
-- Easy to configure and customize.
-- Easy to use
+## 🚀 Features
 
-## Prerequisites
+- Uses **Selenium** with headless Chrome to access Amazon pages reliably
+- Sends an email alert using **Gmail SMTP**
+- Fully configurable product URL and target price
+- Compatible with **Amazon Canada** and others
+- Secure email credentials via `.env` file
 
-- Python 3.x installed on your system.
-- Required Python libraries: `requests`, `bs4`, and `smtplib`.
+---
 
-## Installation
+## 🧱 Requirements
 
-1. Clone the repository:
+- Python 3.8 or higher
+- Google Chrome (installed on your system)
+- ChromeDriver (auto-managed via `webdriver-manager`)
+- Gmail account (App Password required)
+
+---
+
+## 🔧 Installation
+
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/yourusername/Amazon-Price-tracker.git
    cd Amazon-Price-tracker
-   ```
 
 2. Install the required Python libraries:
    ```bash
    pip install requests beautifulsoup4
+   pip install selenium webdriver-manager python-dotenv
    ```
-
+3. **Create a .env file in the project root**
+   ```bash
+   EMAIL_ADDRESS=your_gmail@gmail.com
+   EMAIL_PASSWORD=your_app_password_here
+   ```   
+4.  **How to Generate a Gmail App Password**
+   - This is required if you use Gmail with 2-step verification enabled.
+   - Go to: https://myaccount.google.com/apppasswords
+   - Sign in to your Google account.
+   - Under "Select app", choose Other (Custom name).
+   - Enter a name like AmazonTracker and click Generate.
+   - Copy the 16-character app password.
+   - Paste it into your .env file as the EMAIL_PASSWORD.
 ## Usage
 
 1. Open the script file and update the following:
 
    - Replace the `URL` variable with the Amazon product URL you want to track.
-   - Replace `'youremail@gmail.com'` and `'Two_step_authentication_password'` with your email credentials.
-   - Update the `convert < 220000.00` condition with your desired price threshold.
+   - Replace `'youremail@gmail.com'` and `'Two_step_authentication_password'` with email address and the generated app password
+   - Update the `convert < 100.0` condition with your desired price threshold.
 
 2. Run the script:
 
@@ -49,16 +70,18 @@ This is a basic Amazon price tracker that monitors the price of a specific produ
 - Console Output:
 
   ```
-  219999.00
-  Apple MacBook Pro (15-inch, 2018)
+  Product: Smeg DCGC01 Jug for Overflow Coffee Maker DCF02 DCG01, Glass
+   Price: $51.0
+   Email sent!
   ```
 
 - Email Notification:
 
   ```
-  Subject: Price fell down !!
+  Subject: Amazon Canada Price Drop Alert!
+   The price of 'Smeg DCGC01 Jug for Overflow Coffee Maker DCF02 DCG01, Glass' has dropped to $51.0!
+   Link: https://www.amazon.ca/Smeg-DCGC01-Replacement-Cup-Coffee/dp/B07YP1MZ9B  
 
-  Here's the link https://www.amazon.in/Apple-MR972HN-15-4-inch-i7-8850H-Integrated/dp/B07G49GQ56/ref=sr_1_4?keywords=macbook+pro&qid=1576257615&sr=8-4
   ```
 
 ## Notes
