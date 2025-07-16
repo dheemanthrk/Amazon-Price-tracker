@@ -1,39 +1,93 @@
-import requests
-from bs4 import BeautifulSoup
+import os
 import smtplib
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
 
-URL = "https://www.amazon.in/Apple-MR972HN-15-4-inch-i7-8850H-Integrated/dp/B07G49GQ56/ref=sr_1_4?keywords=macbook+pro&qid=1576257615&sr=8-4"
+# Load email credentials
+load_dotenv()
+EMAIL = os.getenv("EMAIL_ADDRESS")
+PASSWORD = os.getenv("EMAIL_PASSWORD")
 
-headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0'}
+# Amazon Canada product URL and your target price
+URL = "https://www.amazon.ca/Smeg-DCGC01-Replacement-Cup-Coffee/dp/B07YP1MZ9B?psc=1"
+TARGET_PRICE = 100.0  # Example: alert if below $100 CAD
 
-page = requests.get(URL,headers=headers)
+# Set up Chrome options
+options = Options()
+# Comment out this line to see the browser open
+# options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument(
+    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+)
 
-soup = BeautifulSoup(page.content,'html.parser')
+driver = None
 
-title = soup.find(id="productTitle").get_text()
-price = soup.find(id="priceblock_ourprice").get_text()
-convert=float(price[1:])
+try:
+    # Start browser
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.get(URL)
 
-if(convert < 220000.00):
-        send_mail()
-print(convert)
-print(title.strip())
+    # Wait for product title
+    title_element = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.ID, "productTitle"))
+    )
+    title = title_element.text.strip()
 
-def send_mail():
-    server = smtplib.SMTP('smtp.gmail.com',587)
-    server.echlo()
-    server.startlist()
-    server.ehlo()
+    # Try multiple known price locations
+    price_xpaths = [
+        '//*[@id="priceblock_ourprice"]',
+        '//*[@id="priceblock_dealprice"]',
+        '//*[@id="priceblock_saleprice"]',
+        '//*[@class="a-price-whole"]',
+    ]
 
-    server.login('youremail@gmail.com','Two_step_authentication_password')
+    price = None
+    for xpath in price_xpaths:
+        try:
+            element = driver.find_element(By.XPATH, xpath)
+            price_text = element.text.strip().replace("$", "").replace(",", "").split('.')[0]
+            price = float(price_text)
+            break
+        except:
+            continue
 
-    subject = 'Price fell down !!'
-    body = "Here's the link https://www.amazon.in/Apple-MR972HN-15-4-inch-i7-8850H-Integrated/dp/B07G49GQ56/ref=sr_1_4?keywords=macbook+pro&qid=1576257615&sr=8-4"
+    if price is None:
+        raise Exception("Could not find the product price.")
 
-    msg = f"Subject: {subject}\n\n{body}"
+    # Console output (dollar sign is ASCII-safe)
+    print(f"Product: {title}")
+    print(f"Price: ${price}")
 
-    server.sendmail('dheemanthkumawat22@gmail.com','dheemanthkumawat22@gmail.com',msg)#The from and to emails are same in this case
+    # If below target price, send email
+    if price < TARGET_PRICE:
+        subject = "Amazon Canada Price Drop Alert!"
+        body = f"The price of '{title}' has dropped to ${price}!\n\nLink: {URL}"
+        message = f"Subject: {subject}\n\n{body}"
 
-    print("Check your email !!")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(EMAIL, PASSWORD)
+            server.sendmail(EMAIL, EMAIL, message)
 
-    server.quit()
+        print("Email sent!")
+    else:
+        print("Price is still above your target.")
+
+except Exception as e:
+    print(f"Error: {e}")
+
+finally:
+    if driver:
+        try:
+            driver.quit()
+        except:
+            pass
